@@ -1,11 +1,17 @@
-# 🚀 PLAN COMPLETO: ROUTING APP C++ + Qt6
+# ROUTING APP C++ + Qt6
 
-**Migración de Java/JavaFX a C++/Qt6**  
 **Proyecto:** Sistema de rutas optimizadas y TSP con interfaz gráfica interactiva
+
+## Integrantes:
+- Coaquira Suyo Gabriela Dayana
+- Nina Calizaya Rafael Diego
+- Quispe Saavedra Dennis Javier
+- Venero Guevara Christian Henry
+- Villafuerte Quispe Alexander
 
 ---
 
-## 📚 TABLA DE CONTENIDO
+## TABLA DE CONTENIDO
 
 1. [Visión General](#1-visión-general)
 2. [Arquitectura del Sistema](#2-arquitectura-del-sistema)
