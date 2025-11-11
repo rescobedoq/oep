@@ -1,132 +1,178 @@
-\# ROUTING APP C++ + QT6: SISTEMA DE RUTEOS RÁPIDOS
+\# ROUTING APP C++ + Qt6 — Sistema de Ruteos Rápidos
 
 
 
-\## 1. Visión General
+\## 1. Visión general
 
 
 
-Este proyecto es una aplicación de escritorio de \*\*alto rendimiento\*\* diseñada para resolver problemas complejos de optimización en grafos viales masivos. Migramos de Java a \*\*C++ / Qt6\*\* para lograr velocidad y bajo consumo de memoria.
+`Routing App` es una aplicación de escritorio de \*\*alto rendimiento\*\* para resolver problemas de optimización en grafos viales masivos. Migramos de Java a \*\*C++ / Qt 6\*\* para mejorar velocidad y uso de memoria.
 
 
 
-\* \*\*Propósito:\*\* Encontrar rutas óptimas y resolver el Problema del Viajante (TSP) en tiempo real.
+\- \*\*Propósito:\*\* Encontrar rutas óptimas y resolver el Problema del Viajante (TSP) en tiempo real.  
 
-\* \*\*Enfoque:\*\* Rendimiento algorítmico y capacidad para manejar mapas grandes ($30k+$ nodos) sin congelar la interfaz.
-
-
+\- \*\*Objetivo de escala:\*\* manejar mapas grandes (30k+ nodos) sin bloquear la interfaz de usuario.
 
 
 
-
-
-\## 2. Stack Tecnológico
-
-
-
-Elegimos un \*stack\* robusto y de bajo nivel para garantizar la máxima velocidad.
+---
 
 
 
-| Categoría | Tecnología | Rol Principal |
-
-| :--- | :--- | :--- |
-
-| \*\*Lenguaje Base\*\* | \*\*C++17\*\* | Núcleo de alto rendimiento para algoritmos. |
-
-| \*\*Interfaz Gráfica (UI)\*\* | \*\*Qt 6.6+ Widgets\*\* | Desarrollo de UI nativa y multiplataforma. |
-
-| \*\*Build System\*\* | \*\*CMake\*\* | Compilación y gestión de dependencias simple. |
-
-| \*\*Concurrencia\*\* | \*\*std::thread / Qt Concurrent\*\* | Ejecutar cálculos pesados en segundo plano (OBLIGATORIO). |
+\## 2. Stack tecnológico
 
 
 
+| Categoría                      | Tecnología         | Rol principal                                      |
+
+|--------------------------------|--------------------|---------------------------------------------------|
+
+| Lenguaje base                  | C++17              | Núcleo de alto rendimiento para algoritmos.       |
+
+| Interfaz gráfica (UI)          | Qt 6.6+ (Widgets)  | UI nativa y multiplataforma.                      |
+
+| Build system                   | CMake              | Compilación y gestión de dependencias.            |
+
+| Concurrencia                   | `std::thread` / Qt Concurrent | Ejecutar cálculos pesados en segundo plano. |
 
 
 
-
-\## 3. Funcionalidades y Algoritmos
-
-
-
-El sistema soporta dos modos de operación críticos:
+---
 
 
 
-\### A. Búsqueda de Ruta Corta (Shortest Path)
+\## 3. Funcionalidades y algoritmos
 
 
 
-\* \*\*Algoritmos:\*\*
+La app soporta dos modos de operación principales:
 
-&nbsp;   \* \*\*Dijkstra:\*\* El estándar de oro.
 
-&nbsp;   \* \*\*A\\\*\*\*: Más rápido en la práctica (usa heurística de distancia).
 
-&nbsp;   \* \*\*Meta de Rendimiento:\*\* Cálculo en \*\*menos de 100ms\*\*.
+\### A. Búsqueda de ruta corta (Shortest Path)
+
+\- \*\*Algoritmos:\*\* `Dijkstra`, `A\*` (A-star, heurística Euclidiana/Haversine).
+
+\- \*\*Meta de rendimiento:\*\* consultas en < 100 ms (dependiendo del tamaño del grafo y heurística).
 
 
 
 \### B. Problema del Viajante (TSP)
 
+\- \*\*Flujo:\*\* construcción de una Matriz de Distancias (ejecución en hilo de fondo) → resolución con metaheurísticas.
 
-
-\* \*\*Proceso:\*\* Primero, se crea una Matriz de Distancias (paso lento, ejecutado en hilo), y luego se resuelve la matriz.
-
-\* \*\*Algoritmos:\*\* Metaheurísticas avanzadas como \*\*Iterated Greedy (IG)\*\* para encontrar soluciones casi-óptimas rápidamente.
-
-
-
-\### C. UI Responsiva (Clave)
+\- \*\*Algoritmos sugeridos:\*\* `Iterated Greedy (IG)`, búsquedas locales (2-opt/3-opt) como refinamiento.
 
 
 
-\* La carga de mapas y los cálculos de TSP se realizan en \*\*hilos de fondo\*\* (`Async`) para que la interfaz (zoom, pan, botones) \*\*nunca se congele\*\*.
+\### C. UI responsiva (clave)
+
+\- Carga de mapas y cómputos pesados en hilos separados para que la UI (zoom, pan, controles) no se congele.
 
 
 
+---
 
 
 
-
-\## 4.Integrantes (Ejemplo)
-
-
-
-| Nombre | Rol Clave |
-
-| :--- | :--- |
-
-| \[Nombre 1] | \*\*Líder de Algoritmos\*\* (Dijkstra, A\\\*, TSP Core) |
-
-| \[Nombre 2] | \*\*Ingeniería de Grafo\*\* (Binary Loader, Estructuras C++) |
-
-| \[Nombre 3] | \*\*Desarrollo Qt6 UI/UX\*\* (MapWidget, Señales y Slots) |
+\## 4. Integrantes (ejemplo)
 
 
 
+| Nombre     | Rol clave                                           |
+
+|------------|-----------------------------------------------------|
+
+| Nombre 1   | Líder de Algoritmos (Dijkstra, A\*, TSP Core)       |
+
+| Nombre 2   | Ingeniería de Grafos (Binary Loader, Estructuras)  |
+
+| Nombre 3   | Desarrollo Qt6 UI/UX (MapWidget, Señales y Slots)  |
 
 
 
-
-\## 5.Cronograma de Implementación (16 Días)
-
+---
 
 
-| Fase | Tarea Principal (Entregable) | Duración |
 
-| :--- | :--- | :--- |
+\## 5. Cronograma de implementación (16 días)
 
-| \*\*Fase 1: Setup\*\* | \*\*Carga del Grafo\*\* y Estructuras Core. | 2 Días |
 
-| \*\*Fase 2: Pathfinding\*\* | \*\*Dijkstra\*\* y \*\*Threading para Carga\*\*. | 3 Días |
 
-| \*\*Fase 3: UI\*\* | Interfaz Gráfica (Map/Control) y Visualización. | 3 Días |
+| Fase         | Tarea principal (entregable)                            | Duración |
 
-| \*\*Fase 4: A\\\*\*\* | Implementación de \*\*A\\\*\*\* (Mejora de rendimiento SP). | 2 Días |
+|--------------|---------------------------------------------------------|---------:|
 
-| \*\*Fase 5: TSP Core\*\* | \*\*TspMatrix\*\* e Implementación de \*\*IGAlgorithm\*\*. | 4 Días |
+| Fase 1: Setup| Carga del grafo y estructuras core (binary loader, structs) | 2 días  |
 
-| \*\*Fase 6: Final\*\* | Pulido, Métricas y Tests Unitarios. | 2 Días |
+| Fase 2: Pathfinding | Implementación de `Dijkstra` y threading para carga | 3 días  |
+
+| Fase 3: UI   | MapWidget, controles, y visualización                   | 3 días  |
+
+| Fase 4: A\*   | Implementación de `A\*` y optimización de heurística     | 2 días  |
+
+| Fase 5: TSP Core | `TspMatrix` y `IGAlgorithm` (Iterated Greedy)       | 4 días  |
+
+| Fase 6: Final| Pulido, métricas, tests unitarios y documentación       | 2 días  |
+
+
+
+---
+
+
+
+\## 6. Recomendaciones de diseño técnico (rápido)
+
+
+
+1\. \*\*Formato de grafo en disco:\*\* usar un formato binario compacto (nodes array + edges contiguous) para lecturas mmap-friendly.
+
+2\. \*\*Estructuras de memoria:\*\* vectores contiguos (`std::vector`) y estructuras POD para minimizar overhead.
+
+3\. \*\*Heurística A\\\*:\*\* Haversine (geo) o Euclidean (plano) como función admissible; precomputar bounding boxes si es necesario.
+
+4\. \*\*Paralelismo:\*\* usar `std::thread` / `QtConcurrent::run` para operaciones de I/O y cálculo (NO bloquear hilo UI).
+
+5\. \*\*TSP:\*\* evitar resolver TSP exacto en nodos grandes; usar matriz reducido (solo puntos de interés) y metaheurísticas.
+
+
+
+---
+
+
+
+\## 7. Cómo usar / desarrollo local (rápido)
+
+
+
+```bash
+
+\# Clona y entra al repo (ejemplo)
+
+git clone <URL\_DEL\_REPO>
+
+cd <REPO>
+
+
+
+\# Crea y entra a la rama 'dennis' si aún no existe localmente
+
+git checkout -b dennis origin/dennis || git checkout dennis
+
+
+
+\# Agrega README.md (o reemplaza su contenido) y sube los cambios:
+
+git add README.md
+
+git commit -m "docs: README inicial del proyecto Routing App (C++ / Qt6)"
+
+git push origin dennis
+
+\# Si es la primera vez y te pide upstream:
+
+\# git push --set-upstream origin dennis
+
+
 
