@@ -102,7 +102,7 @@ La app soporta dos modos de operación principales:
 
 | Fase         | Tarea principal (entregable)                            | Duración |
 
-|--------------|---------------------------------------------------------|---------:|
+|--------------|---------------------------------------------------------|----------|
 
 | Fase 1: Setup| Carga del grafo y estructuras core (binary loader, structs) | 2 días  |
 
@@ -174,5 +174,5 @@ git push origin dennis
 
 \# git push --set-upstream origin dennis
 
-
+```
 
