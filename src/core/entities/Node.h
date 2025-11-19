@@ -5,7 +5,7 @@
 class Node {
 private:
     int64_t id;
-    Coordinate coordinate;      // Contains latitude and longitude
+    Coordinate coordinate;      // Con latitud y longitud
 
 public:
     Node(
