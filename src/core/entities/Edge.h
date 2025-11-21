@@ -1,9 +1,12 @@
+#pragma once
+
 #include <string>
 #include <unordered_map>
+#include <cstdint> 
 #include "Node.h"
 #include "../value_objects/Distance.h"
 
-
+// Forward declaration
 class VehicleProfile;
 
 class Edge {
@@ -12,7 +15,7 @@ private:
     Node* source;
     Node* target;
     bool isOneWay;
-    Distance distance;      // Distancia en metros
+    Distance distance;      // Distance in meters
     std::unordered_map<std::string, std::string> tags;
 
 public:

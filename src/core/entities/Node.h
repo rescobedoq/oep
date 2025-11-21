@@ -1,11 +1,14 @@
+#pragma once
+
 #include <string>
 #include <unordered_map>
+#include <cstdint> 
 #include "../value_objects/Coordinate.h"
 
 class Node {
 private:
     int64_t id;
-    Coordinate coordinate;      // Con latitud y longitud
+    Coordinate coordinate;      // Contains latitude and longitude
 
 public:
     Node(
