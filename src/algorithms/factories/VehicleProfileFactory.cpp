@@ -75,7 +75,7 @@ std::unique_ptr<VehicleProfile> VehicleProfileFactory::createPedestrianProfile()
     return pedestrian;
 }
 
-static std::unique_ptr<VehicleProfile> getProfile(const std::string& profileName) {
+std::unique_ptr<VehicleProfile> VehicleProfileFactory::getProfile(const std::string& profileName) {
     if (profileName == "car" || profileName == "CAR") {
         return VehicleProfileFactory::createCarProfile();
     } else if (profileName == "peaton" || profileName == "PEDESTRIAN") {
