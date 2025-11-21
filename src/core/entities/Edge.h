@@ -35,6 +35,7 @@ public:
     Distance& getDistance() { return distance; }
     bool IsOneWay() const { return isOneWay; }
     std::unordered_map<std::string, std::string>& getTags() { return tags; }
+    const std::unordered_map<std::string, std::string>& getTags() const { return tags; }
 
     //Tag management
     void addTag(const std::string& key, const std::string& value);
