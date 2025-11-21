@@ -27,6 +27,14 @@ set(PROJECT_SOURCES
     src/core/value_objects/Distance.h
     src/core/value_objects/RouteSegment.h
     
+    # Infrastructure - Loaders
+    src/infraestructure/loaders/OSMGraphLoader.h
+    src/infraestructure/loaders/OSMGraphLoader.cpp
+    src/infraestructure/loaders/BinaryGraphSerializer.h 
+    src/infraestructure/loaders/BinaryGraphSerializer.cpp
+    src/infraestructure/loaders/BinaryGraphLoader.h
+    src/infraestructure/loaders/BinaryGraphLoader.cpp
+    
     # Algorithms - VehicleProfile
     src/algorithms/VehicleProfile.h
     src/algorithms/VehicleProfile.cpp
