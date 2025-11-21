@@ -155,6 +155,13 @@ $RECYCLE.BIN/
 .directory
 .Trash-*
 
+# ==========================================
+# Data Files (Large Binary Files)
+# ==========================================
+# OSM map files (pueden ser muy grandes)
+*.osm
+data/maps/*.osm
+
 # Binary graph caches (regenerables)
 *.bin
 data/graphs/*.bin
