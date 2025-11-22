@@ -1,0 +1,168 @@
+#include "TspService.h"
+#include "../algorithms/tsp/TspMatrix.h"
+#include "../algorithms/tsp/IGAlgorithm.h"
+#include "../algorithms/factories/AlgorithmFactory.h"
+#include "../algorithms/factories/TspAlgorithmFactory.h"
+#include "../utils/exceptions/GraphException.h"
+#include "../utils/exceptions/TspException.h"
+#include <thread>
+#include <chrono>
+#include <algorithm>
+
+TspService::TspService(QObject* parent)
+    : QObject(parent)
+    , graph_(nullptr)
+{}
+
+void TspService::solveAsync(
+    const std::vector<int64_t>& waypointIds,
+    const std::string& tspAlgorithmName,
+    const std::string& pathfindingAlgorithmName,
+    const VehicleProfile* vehicleProfile,
+    bool returnToStart
+) {
+    // Run in separate thread (CRITICAL to NOT freeze UI)
+    std::thread([this, waypointIds, tspAlgorithmName, pathfindingAlgorithmName, vehicleProfile, returnToStart]() {
+        try {
+            if (!graph_) {
+                throw GraphException("Graph not loaded");
+            }
+            
+            // Input validation
+            if (waypointIds.size() < 2) {
+                throw TspException(
+                    TspException::ErrorCode::INSUFFICIENT_NODES,
+                    "TSP requires at least 2 waypoints. Provided: " + 
+                    std::to_string(waypointIds.size())
+                );
+            }
+            
+            // Validate that nodes exist in the graph
+            std::vector<int64_t> invalidNodes;
+            for (int64_t nodeId : waypointIds) {
+                if (!graph_->getNode(nodeId)) {
+                    invalidNodes.push_back(nodeId);
+                }
+            }
+            
+            if (!invalidNodes.empty()) {
+                throw TspException(
+                    TspException::ErrorCode::INVALID_NODES,
+                    std::to_string(invalidNodes.size()) + " waypoint(s) not found in graph",
+                    invalidNodes
+                );
+            }
+            
+            auto totalStartTime = std::chrono::high_resolution_clock::now();
+            
+            // 1. Create TspMatrix
+            size_t n = waypointIds.size();
+            TspMatrix matrix(n, waypointIds);
+            
+            // 2. Precompute matrix (with progress callback)
+            auto precomputeStartTime = std::chrono::high_resolution_clock::now();
+            
+            auto pathfindingAlgo = AlgorithmFactory::createAlgorithm(pathfindingAlgorithmName);
+            
+            matrix.precompute(
+                *graph_,
+                pathfindingAlgo.get(),
+                vehicleProfile,
+                [this](int current, int total, int percent) {
+                    // Emit progress (thread-safe with Qt::QueuedConnection)
+                    emit precomputeProgress(percent);
+                }
+            );
+            
+            auto precomputeEndTime = std::chrono::high_resolution_clock::now();
+            double precomputeTimeMs = std::chrono::duration<double, std::milli>(
+                precomputeEndTime - precomputeStartTime).count();
+            
+            // 2.5. VALIDATE that the matrix has a valid solution
+            if (!matrix.hasValidSolution()) {
+                // Get unreachable pairs for diagnostics
+                auto unreachable = matrix.getUnreachablePairs();
+                
+                // Extract unique problematic nodes
+                std::vector<int64_t> problematicNodes;
+                for (const auto& pair : unreachable) {
+                    int64_t fromNode = matrix.getNodeId(pair.first);
+                    int64_t toNode = matrix.getNodeId(pair.second);
+                    
+                    if (std::find(problematicNodes.begin(), problematicNodes.end(), fromNode) 
+                        == problematicNodes.end()) {
+                        problematicNodes.push_back(fromNode);
+                    }
+                    if (std::find(problematicNodes.begin(), problematicNodes.end(), toNode) 
+                        == problematicNodes.end()) {
+                        problematicNodes.push_back(toNode);
+                    }
+                }
+                
+                std::string errorMsg = "TSP validation failed: " + 
+                    std::to_string(unreachable.size()) + " unreachable pairs found.";
+                
+                if (vehicleProfile) {
+                    errorMsg += " Try using a different vehicle profile or removing restricted waypoints.";
+                }
+                
+                throw TspException(
+                    TspException::ErrorCode::UNREACHABLE_NODES,
+                    errorMsg,
+                    problematicNodes
+                );
+            }
+            
+            // 3. Solve TSP
+            auto tspAlgo = TspAlgorithmFactory::create(tspAlgorithmName);
+            
+            // Configure returnToStart if IG
+            if (auto igAlgo = dynamic_cast<IGAlgorithm*>(tspAlgo.get())) {
+                igAlgo->setReturnToStart(returnToStart);
+            }
+            
+            std::vector<int> tour = tspAlgo->solve(matrix, waypointIds);
+            
+            auto totalEndTime = std::chrono::high_resolution_clock::now();
+            double totalTimeMs = std::chrono::duration<double, std::milli>(
+                totalEndTime - totalStartTime).count();
+            
+            // 4. Calculate total distance
+            double totalDistance = matrix.calculateTourCost(tour, returnToStart);
+            
+            // 5. Build result
+            TspResult result;
+            result.tour = tour;
+            result.nodeIds = waypointIds;
+            result.totalDistance = totalDistance;
+            result.executionTimeMs = totalTimeMs;
+            result.precomputeTimeMs = precomputeTimeMs;
+            result.tspAlgorithmName = tspAlgorithmName;
+            
+            emit tspSolved(result);
+            
+        } catch (const TspException& e) {
+            // Specific TSP error with detailed information
+            QString errorMsg = QString::fromStdString(e.getUserFriendlyMessage());
+            
+            // Add recovery suggestions
+            auto suggestions = e.getRecoverySuggestions();
+            if (!suggestions.empty()) {
+                errorMsg += "\n\nSuggestions:";
+                for (const auto& suggestion : suggestions) {
+                    errorMsg += "\n  • " + QString::fromStdString(suggestion);
+                }
+            }
+            
+            emit tspError(errorMsg);
+            
+        } catch (const GraphException& e) {
+            // Graph error
+            emit tspError(QString("Graph error: %1").arg(e.what()));
+            
+        } catch (const std::exception& e) {
+            // Generic error
+            emit tspError(QString("TSP error: %1").arg(e.what()));
+        }
+    }).detach();
+}
