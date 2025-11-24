@@ -35,11 +35,15 @@ public:
     Distance& getDistance() { return distance; }
     bool IsOneWay() const { return isOneWay; }
     std::unordered_map<std::string, std::string>& getTags() { return tags; }
+    const std::unordered_map<std::string, std::string>& getTags() const { return tags; }
 
-    //Tag management
+    // Tag management
     void addTag(const std::string& key, const std::string& value);
     std::string getTag(const std::string& key) const;
     bool hasTag(const std::string& key) const;
+    
+    // Helper to get street name with fallback
+    std::string getStreetName() const;
 
     // Comparation
     bool operator==(const Edge& other) const { return id == other.getId(); }

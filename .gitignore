@@ -1,0 +1,249 @@
+# ============================================
+# C++ / Qt / CMake Project - .gitignore
+# ============================================
+
+# ==========================================
+# Build Directories
+# ==========================================
+build/
+bin/
+out/
+cmake-build-*/
+Debug/
+Release/
+RelWithDebInfo/
+MinSizeRel/
+
+# ==========================================
+# CMake Generated Files
+# ==========================================
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# ==========================================
+# Qt Generated Files
+# ==========================================
+# MOC (Meta-Object Compiler)
+moc_*.cpp
+moc_*.h
+*_moc.cpp
+
+# UIC (User Interface Compiler)
+ui_*.h
+
+# RCC (Resource Compiler)
+qrc_*.cpp
+
+# Qt Creator
+*.user
+*.user.*
+*.pro.user*
+*.autosave
+*.qmlproject.user
+*.qmlproject.user.*
+
+# Qt build directories
+*_autogen/
+.qt/
+.qtc_clangd/
+
+# ==========================================
+# Compiled Object Files
+# ==========================================
+*.o
+*.obj
+*.elf
+*.lo
+*.slo
+*.ko
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# ==========================================
+# Precompiled Headers
+# ==========================================
+*.gch
+*.pch
+
+# ==========================================
+# Static & Shared Libraries
+# ==========================================
+*.lib
+*.a
+*.la
+*.lai
+
+# ==========================================
+# Debug Files
+# ==========================================
+*.dSYM/
+*.su
+*.idb
+*.pdb
+*.ilk
+
+# ==========================================
+# IDE Specific Files
+# ==========================================
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# Qt Creator
+.qtcreator/
+*.creator
+*.creator.user
+*.includes
+*.files
+*.config
+*.cflags
+*.cxxflags
+
+# Visual Studio
+.vs/
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+*.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# CLion
+.idea/
+cmake-build-*/
+
+# Eclipse
+.cproject
+.project
+.settings/
+
+# ==========================================
+# Operating System Files
+# ==========================================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.stackdump
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ==========================================
+# Data Files (Large Binary Files)
+# ==========================================
+# OSM map files (pueden ser muy grandes)
+*.osm
+data/maps/*.osm
+
+# Binary graph caches (regenerables)
+*.bin
+data/graphs/*.bin
+
+# ==========================================
+# Logs & Temporary Files
+# ==========================================
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.*.sw[a-z]
+
+# ==========================================
+# Documentation Build
+# ==========================================
+docs/html/
+docs/latex/
+docs/_build/
+Doxyfile.bak
+
+# ==========================================
+# Package Management
+# ==========================================
+# vcpkg
+vcpkg_installed/
+.vcpkg-root
+
+# Conan
+conan.lock
+conanbuildinfo.*
+conaninfo.txt
+
+# ==========================================
+# Test Results
+# ==========================================
+Testing/
+test_results/
+*.gcov
+*.gcda
+*.gcno
+coverage/
+
+# ==========================================
+# Profiling & Analysis
+# ==========================================
+*.prof
+*.gprof
+callgrind.out.*
+perf.data
+*.cachegrind
+
+# ==========================================
+# Custom Project Specifics
+# ==========================================
+# Binarios compilados del proyecto
+RoutingApp
+RoutingApp.exe
+TestSimple
+TestSimple.exe
+TestNodeSearch
+TestNodeSearch.exe
+TestWaypoints
+TestWaypoints.exe
+
+# Archivos de caché generados en runtime
+*.cache
+
+# Archivos de backup
+*.bak
+*.backup
+
+# ==========================================
+# KEEP (Do NOT Ignore)
+# ==========================================
+# Asegurar que estos directorios existan (con .gitkeep)
+!data/.gitkeep
+!data/maps/.gitkeep
+!data/graphs/.gitkeep
+!docs/.gitkeep
+
+# Configuración de ejemplo (para otros desarrolladores)
+!config.example.json
