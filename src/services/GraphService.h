@@ -3,6 +3,7 @@
 #include "../core/entities/Graph.h"
 #include <QObject>
 #include <QString>
+#include <QFuture>
 #include <atomic>
 #include <memory>
 
@@ -20,6 +21,7 @@ class GraphService : public QObject {
 private: 
     std::shared_ptr<Graph> graph;
     std::atomic<bool> cancelRequested = {false};
+    QFuture<void> loadFuture_;
 
     // Loads graph (executing in separate thread)
     void loadGraphInternal(const QString& baseName);

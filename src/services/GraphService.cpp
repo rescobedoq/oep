@@ -6,7 +6,7 @@
 #include <QFileInfo>
 #include <QElapsedTimer>
 #include <QDebug>
-#include <thread>
+#include <QtConcurrent/QtConcurrent>
 #include <stdexcept>
 
 namespace services {
@@ -22,11 +22,10 @@ GraphService::~GraphService() {
 void GraphService::loadGraphAsync(const QString& baseName) {
     cancelRequested = false;
     
-    // Execute in a separate thread
-    std::thread loadThread([this, baseName]() {
+    // Execute in Qt thread pool (thread-safe with Qt signals)
+    loadFuture_ = QtConcurrent::run([this, baseName]() {
         loadGraphInternal(baseName);
     });
-    loadThread.detach();
 }
 
 void GraphService::cancelLoad() {
