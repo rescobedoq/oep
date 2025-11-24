@@ -5,7 +5,7 @@
 #include "../algorithms/factories/TspAlgorithmFactory.h"
 #include "../utils/exceptions/GraphException.h"
 #include "../utils/exceptions/TspException.h"
-#include <thread>
+#include <QtConcurrent/QtConcurrent>
 #include <chrono>
 #include <algorithm>
 
@@ -21,8 +21,15 @@ void TspService::solveAsync(
     const VehicleProfile* vehicleProfile,
     bool returnToStart
 ) {
-    // Run in separate thread (CRITICAL to NOT freeze UI)
-    std::thread([this, waypointIds, tspAlgorithmName, pathfindingAlgorithmName, vehicleProfile, returnToStart]() {
+    // Copiar VehicleProfile si existe (para evitar use-after-free en thread asíncrono)
+    std::unique_ptr<VehicleProfile> vehicleProfileCopy = nullptr;
+    if (vehicleProfile) {
+        vehicleProfileCopy = std::make_unique<VehicleProfile>(*vehicleProfile);
+    }
+    
+    // Run in Qt thread pool (thread-safe with Qt signals)
+    tspFuture_ = QtConcurrent::run([this, waypointIds, tspAlgorithmName, pathfindingAlgorithmName, 
+                                    vehicleProfileCopy = std::move(vehicleProfileCopy), returnToStart]() {
         try {
             if (!graph_) {
                 throw GraphException("Graph not loaded");
@@ -67,7 +74,7 @@ void TspService::solveAsync(
             matrix.precompute(
                 *graph_,
                 pathfindingAlgo.get(),
-                vehicleProfile,
+                vehicleProfileCopy.get(),  // Usar la copia
                 [this](int current, int total, int percent) {
                     // Emit progress (thread-safe with Qt::QueuedConnection)
                     emit precomputeProgress(percent);
@@ -102,7 +109,7 @@ void TspService::solveAsync(
                 std::string errorMsg = "TSP validation failed: " + 
                     std::to_string(unreachable.size()) + " unreachable pairs found.";
                 
-                if (vehicleProfile) {
+                if (vehicleProfileCopy) {
                     errorMsg += " Try using a different vehicle profile or removing restricted waypoints.";
                 }
                 
@@ -127,13 +134,57 @@ void TspService::solveAsync(
             double totalTimeMs = std::chrono::duration<double, std::milli>(
                 totalEndTime - totalStartTime).count();
             
-            // 4. Calculate total distance
+            // 4. Calculate total distance and collect segment details
             double totalDistance = matrix.calculateTourCost(tour, returnToStart);
+            
+            // ✅ Collect edges and nodes for each segment
+            std::vector<std::vector<Edge*>> segmentEdges;
+            std::vector<std::vector<int64_t>> segmentNodes;
+            
+            size_t numSegments = returnToStart ? tour.size() : tour.size() - 1;
+            
+            for (size_t i = 0; i < numSegments; ++i) {
+                int fromIdx = tour[i];
+                int toIdx = tour[(i + 1) % tour.size()];
+                
+                int64_t fromNodeId = waypointIds[fromIdx];
+                int64_t toNodeId = waypointIds[toIdx];
+                
+                // Get the path for this segment from the matrix
+                auto segmentPath = matrix.getPath(fromIdx, toIdx);
+                
+                std::vector<Edge*> edges;
+                std::vector<int64_t> nodes;
+                
+                // Add start node
+                if (!segmentPath.empty()) {
+                    Edge* firstEdge = graph_->getEdge(segmentPath[0]);
+                    if (firstEdge && firstEdge->getSource()) {
+                        nodes.push_back(firstEdge->getSource()->getId());
+                    }
+                }
+                
+                // Collect edges and nodes
+                for (int64_t edgeId : segmentPath) {
+                    Edge* edge = graph_->getEdge(edgeId);
+                    if (edge) {
+                        edges.push_back(edge);
+                        if (edge->getTarget()) {
+                            nodes.push_back(edge->getTarget()->getId());
+                        }
+                    }
+                }
+                
+                segmentEdges.push_back(edges);
+                segmentNodes.push_back(nodes);
+            }
             
             // 5. Build result
             TspResult result;
             result.tour = tour;
             result.nodeIds = waypointIds;
+            result.segmentEdges = segmentEdges;   // ✅ Edges por segmento
+            result.segmentNodes = segmentNodes;   // ✅ Nodos por segmento
             result.totalDistance = totalDistance;
             result.executionTimeMs = totalTimeMs;
             result.precomputeTimeMs = precomputeTimeMs;
@@ -164,5 +215,5 @@ void TspService::solveAsync(
             // Generic error
             emit tspError(QString("TSP error: %1").arg(e.what()));
         }
-    }).detach();
+    });
 }

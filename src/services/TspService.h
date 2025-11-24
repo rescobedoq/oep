@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QFuture>
 #include <memory>
 #include <vector>
 #include <cstdint>
@@ -23,8 +24,10 @@ public:
      * @brief TSP result
      */
     struct TspResult {
-        std::vector<int> tour;           // Tour indices
-        std::vector<int64_t> nodeIds;    // Original node IDs
+        std::vector<int> tour;                          // Tour indices
+        std::vector<int64_t> nodeIds;                   // Original node Ids
+        std::vector<std::vector<Edge*>> segmentEdges;   // Edges for each segment A→B
+        std::vector<std::vector<int64_t>> segmentNodes; // Nodes for each segment
         double totalDistance;
         double executionTimeMs;
         double precomputeTimeMs;
@@ -39,6 +42,7 @@ public:
     
 private:
     std::shared_ptr<Graph> graph_;
+    QFuture<void> tspFuture_;
     
 public:
     explicit TspService(QObject* parent = nullptr);
