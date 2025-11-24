@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QFuture>
 #include <memory>
 #include <vector>
 #include <cstdint>
@@ -21,7 +22,9 @@ public:
      * @brief Pathfinding result
      */
     struct PathResult {
-        std::vector<int64_t> pathEdgeIds;
+        std::vector<Edge*> pathEdges;         // ✅ Punteros a edges (para nombres de calles)
+        std::vector<int64_t> pathEdgeIds;     // IDs de edges (backward compatibility)
+        std::vector<int64_t> pathNodeIds;     // IDs de nodos en orden
         double totalDistance;
         size_t nodesExplored;
         double executionTimeMs;
@@ -36,6 +39,7 @@ public:
     
 private:
     std::shared_ptr<Graph> graph_;
+    QFuture<void> pathFuture_;
     
 public:
     explicit PathfindingService(QObject* parent = nullptr);
