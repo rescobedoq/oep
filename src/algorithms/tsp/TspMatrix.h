@@ -10,17 +10,16 @@
 #include <functional>
 
 /**
- * @brief Matriz TSP con distancias y paths precalculados
+ * @brief TSP Matrix with distances and precomputed paths
  * 
- * MAPEO COMPLETO de model.tsp.TspMatrix (Java)
- * - Precompute paralelo con cache bidireccional
- * - nearestNeighborRoute() para inicialización heurística
- * - getEntry() para acceder a distancias/paths
+ * - parallel precompute with bidirectional cache
+ * - nearestNeighborRoute() for heuristic initialization
+ * - getEntry() to access distances/paths
  */
 class TspMatrix {
 public:
     /**
-     * @brief Entrada de matriz (distance + path)
+     * @brief Matrix entry (distance + path)
      */
     struct Entry {
         double distance;
@@ -32,11 +31,11 @@ public:
     };
     
     /**
-     * @brief Callback de progreso para UI
+     * @brief Progress callback for UI
      * 
-     * @param current Pares completados
-     * @param total Pares totales
-     * @param percent Porcentaje (0-100)
+     * @param current Completed pairs
+     * @param total Total pairs
+     * @param percent Percentage (0-100)
      */
     using ProgressCallback = std::function<void(int current, int total, int percent)>;
     
@@ -51,23 +50,18 @@ public:
     /**
      * @brief Constructor
      * 
-     * @param size Número de waypoints
-     * @param nodeIds IDs de nodos a visitar
+     * @param size Number of waypoints
+     * @param nodeIds Node IDs to visit
      */
     TspMatrix(size_t size, const std::vector<int64_t>& nodeIds);
     
     /**
-     * @brief Precomputa matriz usando pathfinding
+     * @brief Precompute matrix using pathfinding
      * 
-     * MAPEO de TspMatrix constructor en Java (con ExecutorService)
-     * 
-     * @param graph Grafo
-     * @param algorithm Algoritmo de pathfinding (Dijkstra, A*, etc.)
-     * @param vehicleProfile Perfil de vehículo (puede ser nullptr)
-     * @param progressCallback Callback para feedback de progreso (opcional)
-     * 
-     * NOTA: En C++ usamos std::thread básico (NO ThreadPool como Java)
-     * Para UI responsiva, llamar desde std::thread en TspService
+     * @param graph Graph
+     * @param algorithm Pathfinding algorithm (Dijkstra, A*, etc.)
+     * @param vehicleProfile Vehicle profile (can be nullptr)
+     * @param progressCallback Callback for progress feedback (optional)
      */
     void precompute(
         const Graph& graph,
@@ -77,79 +71,86 @@ public:
     );
     
     /**
-     * @brief Obtiene entrada de matriz
+     * @brief Get matrix entry
      */
     const Entry& getEntry(size_t fromIdx, size_t toIdx) const {
         return matrix_[fromIdx][toIdx];
     }
     
     /**
-     * @brief Obtiene entrada de matriz por node IDs
+     * @brief Get matrix entry by node IDs
      */
     const Entry& getEntry(int64_t fromNodeId, int64_t toNodeId) const;
     
     /**
-     * @brief Establece distancia manualmente (para tests)
+     * @brief Get path of edges between two nodes
+     */
+    const std::vector<int64_t>& getPath(size_t fromIdx, size_t toIdx) const {
+        return matrix_[fromIdx][toIdx].pathEdgeIds;
+    }
+    
+    /**
+     * @brief Manually set distance (for tests)
      */
     void setDistance(size_t fromIdx, size_t toIdx, double distance) {
         matrix_[fromIdx][toIdx].distance = distance;
     }
     
     /**
-     * @brief Obtiene node ID por índice
+     * @brief Get node ID by index
      */
     int64_t getNodeId(size_t idx) const {
         return nodeIds_[idx];
     }
     
     /**
-     * @brief Obtiene índice por node ID
+     * @brief Get index by node ID
      */
     size_t getNodeIndex(int64_t nodeId) const;
     
     /**
-     * @brief Tamaño de matriz
+     * @brief Matrix size
      */
     size_t getSize() const {
         return size_;
     }
     
     /**
-     * @brief Calcula costo de tour
+     * @brief Calculate tour cost
      * 
-     * @param tour Índices del tour (0 a N-1)
-     * @param returnToStart Si debe volver al inicio
-     * @return Distancia total
+     * @param tour Tour indices (0 to N-1)
+     * @param returnToStart Whether to return to the start
+     * @return Total distance
      */
     double calculateTourCost(const std::vector<int>& tour, bool returnToStart = false) const;
     
     /**
-     * @brief Inicialización heurística Nearest Neighbor
+     * @brief Nearest Neighbor heuristic initialization
      * 
-     * MAPEO: TspMatrix.nearestNeighborRoute() en Java
+     * MAPPING: TspMatrix.nearestNeighborRoute() in Java
      * 
-     * @param startIdx Índice de inicio (0 a N-1)
-     * @return Tour heurístico (índices)
+     * @param startIdx Start index (0 to N-1)
+     * @return Heuristic tour (indices)
      */
     std::vector<int> nearestNeighborRoute(int startIdx = 0) const;
     
     /**
-     * @brief Valida que la matriz no tenga distancias infinitas
+     * @brief Validate that the matrix has no infinite distances
      * 
-     * @return Vector de pares (fromIdx, toIdx) con distancias infinitas
+     * @return Vector of pairs (fromIdx, toIdx) with infinite distances
      */
     std::vector<std::pair<size_t, size_t>> getUnreachablePairs() const;
     
     /**
-     * @brief Verifica si la matriz tiene solución válida
+     * @brief Validate if the matrix has a valid solution
      * 
-     * @return true si todos los nodos son alcanzables entre sí
+     * @return true if all nodes are reachable from each other
      */
     bool hasValidSolution() const;
     
 private:
     /**
-     * @brief Convierte path de edges a distancia total
+     * @brief Convert path of edges to total distance
      */
     double calculatePathDistance(const Graph& graph, const std::vector<int64_t>& edgeIds) const;
 };

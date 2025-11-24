@@ -86,7 +86,7 @@ void TspMatrix::precompute(
         }
     };
     
-    // Lanzar threads para procesar filas
+    // Throw threads for processing rows
     std::vector<std::thread> threads;
     std::atomic<size_t> nextRow{0};
     
@@ -102,7 +102,7 @@ void TspMatrix::precompute(
         threads.emplace_back(workerFunction);
     }
     
-    // Esperar a que todos los threads terminen
+    // Wait for all threads to finish
     for (auto& thread : threads) {
         thread.join();
     }
