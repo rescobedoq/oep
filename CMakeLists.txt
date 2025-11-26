@@ -96,6 +96,15 @@ else()
 endif()
 
 target_link_libraries(oep PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_include_directories(oep PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Copiar carpeta data al directorio de build
+add_custom_command(TARGET oep POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/data
+        $<TARGET_FILE_DIR:oep>/data
+    COMMENT "Copiando carpeta data al directorio de ejecución"
+)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

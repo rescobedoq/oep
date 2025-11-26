@@ -2,17 +2,35 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-
 #include <QSplitter>
+#include <QStatusBar>
 #include <memory>
-
-#include "core/entities/Graph.h"
-// #include "services/GraphService.h"
-// #include "services/PathfindingService.h"
-// #include "services/TspService.h"
+#include <vector>
+#include <cstdint>
+#include "src/core/entities/Graph.h"
 #include "MapWidget.h"
-// #include "ui/ControlPanel.h"
-// #include "ui/ResultsPanel.h"
+// #include "ControlPanel.h"
+// #include "ResultsPanel.h"
+
+
+class Graph; 
+class PathfindingService; 
+class TspService;
+
+namespace services {
+class GraphService;
+}
+
+namespace ui {
+class MapWidget;
+class ControlPanel;
+class ResultsPanel;
+}
+
+// Usar clases del namespace ui
+using ui::MapWidget;
+using ui::ControlPanel;
+using ui::ResultsPanel;
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -25,49 +43,18 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
 private slots:
-    /**
-     * @brief Slot cuando el grafo se carga exitosamente
-     */
-    // void onGraphLoaded(std::shared_ptr<core::entities::Graph> graph, qint64 loadTimeMs);
+    // GraphService signals
+    void onGraphLoaded(std::shared_ptr<Graph> graph, qint64 loadTimeMs);
+    void onGraphLoadError(const QString& errorMessage);
+    void onGraphLoadProgress(const QString& message, double progress);
 
-    /**
-     * @brief Slot cuando hay error en carga
-     */
-    //void onGraphLoadError(const QString& errorMessage);
-
-    /**
-     * @brief Slot cuando usuario solicita búsqueda de ruta
-     */
-    /*void onFindPathRequested(
-        int64_t startNodeId,
-        int64_t endNodeId,
-        const QString& algorithmName,
-        const QString& vehicleType
-        );*/
-
-    /**
-     * @brief Slot cuando usuario solicita resolver TSP
-     */
-    /*void onSolveTspRequested(
-        const std::vector<int64_t>& nodeIds,
-        int64_t startNodeId,
-        const QString& algorithmName,
-        bool returnToStart
-        );*/
-
-    /**
-     * @brief Slot cuando pathfinding se completa
-     */
-    // void onPathFound(const services::PathfindingService::PathResult& result);
-
-    /**
-     * @brief Slot cuando TSP se resuelve
-     */
-    //void onTspSolved(const std::vector<int>& tour, double totalDistance);
+    // MapWidget signals
+    void onMapNodeSelected(int64_t nodeId, bool isSelected);
+    void onMapSelectionChanged(const std::vector<int64_t>& selectedNodes);
 
 private:
     void setupUi();
@@ -75,20 +62,36 @@ private:
     void connectSignals();
     void loadDefaultGraph();
 
-    // Servicios
-    // std::unique_ptr<services::GraphService> graphService_;
-    // std::unique_ptr<services::PathfindingService> pathfindingService_;
-    // std::unique_ptr<services::TspService> tspService_;
+    /**
+     * @brief Valida que haya nodos suficientes según el modo actual
+     */
+    bool validateNodeSelection(const std::vector<int64_t>& nodeIds) const;
 
-    // Widgets
-    //MapWidget* mapWidget_;
-    // ControlPanel* controlPanel_;
-    // ResultsPanel* resultsPanel_;
+    // SERVICIOS
+    services::GraphService* graphService_;
+    PathfindingService* pathfindingService_;
+    TspService* tspService_;
+
+    // WIDGETS
+    MapWidget* mapWidget_;
+    //ControlPanel* controlPanel_;
+    //ResultsPanel* resultsPanel_;
     QSplitter* mainSplitter_;
     QSplitter* verticalSplitter_;
 
-    // Estado
-    // std::shared_ptr<core::entities::Graph> currentGraph_;
+    // ESTADO
+    std::shared_ptr<Graph> currentGraph_;
+    
+    // Últimos resultados
+    void* lastPathResult_; 
+    void* lastTspResult_;
+    
+    // Configuración actual
+    bool isTspMode_;
+    QString currentProfile_;
+    QString currentPathfindingAlgorithm_;
+    QString currentTspAlgorithm_;
+    bool returnToStart_;
 
     Ui::MainWindow *ui;
 };
