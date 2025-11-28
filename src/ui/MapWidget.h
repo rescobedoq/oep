@@ -12,6 +12,9 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include "src/core/entities/Graph.h"
+#include "src/core/entities/Edge.h"
+#include "src/core/entities/Node.h"
 
 class Graph;
 class Edge;
@@ -169,6 +172,11 @@ private:
     // Estado de pan
     bool isPanning_;
     QPoint lastPanPoint_;
+
+    // Detectar si fue click o drag
+    QPoint mousePressPos_;
+    bool wasDragging_ = false;
+    static constexpr int DRAG_THRESHOLD = 5;  // Píxeles mínimos para considerar drag
     
     // Perfil de vehículo
     QString vehicleProfile_;
@@ -193,7 +201,7 @@ private:
     std::vector<QGraphicsLineItem*> edgeItems_;
     
     // Calidad de renderizado
-    RenderQuality renderQuality_ = RenderQuality::MEDIUM;
+    RenderQuality renderQuality_ = RenderQuality::LOW;
     
     // Cache de colores para performance
     std::unordered_map<std::string, QColor> colorCache_;
@@ -208,13 +216,24 @@ private:
     std::unordered_set<Edge*> blockedForAutomovil_;
     std::unordered_set<Edge*> blockedForPeaton_;
     bool edgesClassified_ = false;
-    
+
+    // Throttling para renderizado
+    QTimer* renderThrottle_ = nullptr;
+    bool renderPending_ = false;
+
+    // Spatial grid para nodos (búsqueda O(1))
+    std::vector<std::vector<std::vector<Node*>>> nodeGrid_;
+    bool nodeGridBuilt_ = false;
+   
     void classifyBlockedEdges();
     void buildSpatialGrid();
     void renderVisibleEdges();
     QColor getHighwayColor(Edge* edge);
     int getGridX(double x) const;
     int getGridY(double y) const;
+    void scheduleRender();
+    void buildNodeGrid();
+    int64_t findNodeInGrid(const QPointF& scenePos, double threshold);
 };
 
 } // namespace ui
