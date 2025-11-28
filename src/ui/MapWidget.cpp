@@ -1,7 +1,4 @@
 #include "MapWidget.h"
-#include "src/core/entities/Graph.h"
-#include "src/core/entities/Edge.h"
-#include "src/core/entities/Node.h"
 #include <QWheelEvent>
 #include <QMouseEvent>
 #include <QPen>
@@ -43,9 +40,21 @@ MapWidget::MapWidget(QWidget* parent)
     
     // Fondo blanco
     setBackgroundBrush(QBrush(Qt::white));
+
+    // Timer para throttling de renderizado (16ms ≈ 60fps)
+    renderThrottle_ = new QTimer(this);
+    renderThrottle_->setSingleShot(true);
+    renderThrottle_->setInterval(16);
+    connect(renderThrottle_, &QTimer::timeout, this, &MapWidget::renderVisibleEdges);
 }
 
 MapWidget::~MapWidget() = default;
+
+void MapWidget::scheduleRender() {
+    if (!renderThrottle_->isActive()) {
+        renderThrottle_->start();
+    }
+}
 
 void MapWidget::setGraph(std::shared_ptr<Graph> graph) {
     graph_ = graph;
@@ -72,6 +81,7 @@ void MapWidget::setGraph(std::shared_ptr<Graph> graph) {
     
     // Construir grid para búsqueda rápida
     buildSpatialGrid();
+    buildNodeGrid();
     
     // Establecer vista
     resetView();
@@ -405,25 +415,7 @@ void MapWidget::updateNodeLabels() {
 }
 
 int64_t MapWidget::findNodeAtPosition(const QPointF& scenePos, double threshold) {
-    if (!graph_) return -1;
-    
-    double minDistSq = threshold * threshold;
-    int64_t closestNodeId = -1;
-    
-    // Buscar nodo más cercano
-    for (Node* node : graph_->getNodes()) {
-        QPointF nodePos = geoToPixel(node->getCoordinate().getLatitude(), node->getCoordinate().getLongitude());
-        double dx = scenePos.x() - nodePos.x();
-        double dy = scenePos.y() - nodePos.y();
-        double distSq = dx * dx + dy * dy;
-        
-        if (distSq < minDistSq) {
-            minDistSq = distSq;
-            closestNodeId = node->getId();
-        }
-    }
-    
-    return closestNodeId;
+    return findNodeInGrid(scenePos, threshold);
 }
 
 void MapWidget::handleNodeClick(int64_t nodeId) {
@@ -529,7 +521,6 @@ void MapWidget::resetView() {
 }
 
 void MapWidget::wheelEvent(QWheelEvent* event) {
-    // Zoom con rueda del mouse
     double scaleFactor = 1.15;
     
     double newZoom = currentZoom_;
@@ -540,47 +531,40 @@ void MapWidget::wheelEvent(QWheelEvent* event) {
         newZoom /= scaleFactor;
     }
     
-    // Aplicar límites de zoom
     if (newZoom < MIN_ZOOM || newZoom > MAX_ZOOM) {
         event->accept();
         return;
     }
     
-    // Aplicar zoom
     double actualScale = newZoom / currentZoom_;
     scale(actualScale, actualScale);
     currentZoom_ = newZoom;
-    renderVisibleEdges();
+    
+    scheduleRender();
     
     event->accept();
 }
 
 void MapWidget::mousePressEvent(QMouseEvent* event) {
     if (event->button() == Qt::LeftButton) {
-        // Convertir posición a coordenadas de escena
-        QPointF scenePos = mapToScene(event->pos());
+        // Guardar posición inicial para detectar si es click o drag
+        mousePressPos_ = event->pos();
+        wasDragging_ = false;
         
-        // Intentar encontrar nodo cercano
-        int64_t nodeId = findNodeAtPosition(scenePos, 15.0);
-        
-        if (nodeId != -1 && selectionMode_ == SelectionMode::AUTOMATIC) {
-            // Manejar selección de nodo
-            handleNodeClick(nodeId);
-            event->accept();
-            return;
-        } else if (nodeId != -1 && 
-                   (selectionMode_ == SelectionMode::MANUAL_START || 
-                    selectionMode_ == SelectionMode::MANUAL_DEST)) {
-            // Selección manual
-            handleNodeClick(nodeId);
-            event->accept();
-            return;
-        }
-        
-        // Si no hay nodo, iniciar pan
+        // Preparar para posible pan
         isPanning_ = true;
         lastPanPoint_ = event->pos();
         setCursor(Qt::ClosedHandCursor);
+        setRenderHint(QPainter::Antialiasing, false);
+        
+        event->accept();
+    } else if (event->button() == Qt::RightButton) {
+        isPanning_ = true;
+        lastPanPoint_ = event->pos();
+        wasDragging_ = true; 
+        setCursor(Qt::ClosedHandCursor);
+        setRenderHint(QPainter::Antialiasing, false);
+        
         event->accept();
     } else {
         QGraphicsView::mousePressEvent(event);
@@ -591,6 +575,15 @@ void MapWidget::mouseMoveEvent(QMouseEvent* event) {
     if (isPanning_) {
         QPoint delta = event->pos() - lastPanPoint_;
         lastPanPoint_ = event->pos();
+        
+        // Detectar si el usuario está arrastrando (no solo un click)
+        if (!wasDragging_) {
+            QPoint totalDelta = event->pos() - mousePressPos_;
+            if (std::abs(totalDelta.x()) > DRAG_THRESHOLD || 
+                std::abs(totalDelta.y()) > DRAG_THRESHOLD) {
+                wasDragging_ = true;
+            }
+        }
         
         // Pan horizontal y vertical
         horizontalScrollBar()->setValue(horizontalScrollBar()->value() - delta.x());
@@ -603,11 +596,28 @@ void MapWidget::mouseMoveEvent(QMouseEvent* event) {
 }
 
 void MapWidget::mouseReleaseEvent(QMouseEvent* event) {
-    if (event->button() == Qt::LeftButton && isPanning_) {
+    if ((event->button() == Qt::LeftButton || event->button() == Qt::RightButton) && isPanning_) {
         isPanning_ = false;
         setCursor(Qt::ArrowCursor);
-        renderVisibleEdges();
         
+        if (event->button() == Qt::LeftButton && !wasDragging_) {
+            QPointF scenePos = mapToScene(mousePressPos_);
+            int64_t nodeId = findNodeAtPosition(scenePos, 15.0);
+            
+            if (nodeId != -1) {
+                handleNodeClick(nodeId);
+            }
+        }
+        
+        // Restaurar calidad de renderizado
+        setRenderHint(QPainter::Antialiasing, renderQuality_ >= RenderQuality::MEDIUM);
+        
+        // Solo re-renderizar si hubo movimiento
+        if (wasDragging_) {
+            scheduleRender();
+        }
+        
+        wasDragging_ = false;
         event->accept();
     } else {
         QGraphicsView::mouseReleaseEvent(event);
@@ -615,8 +625,6 @@ void MapWidget::mouseReleaseEvent(QMouseEvent* event) {
 }
 
 void MapWidget::renderVisibleEdges() {
-    if (!graph_ || !gridBuilt_) return;
-    
     // Limpiar aristas anteriores
     for (auto* item : edgeItems_) {
         if (item && item->scene() == scene_) {
@@ -628,7 +636,6 @@ void MapWidget::renderVisibleEdges() {
     
     QRectF visibleRect = mapToScene(viewport()->rect()).boundingRect();
     
-    // Buscar solo en celdas visibles del grid
     int minGridX = getGridX(visibleRect.left());
     int maxGridX = getGridX(visibleRect.right());
     int minGridY = getGridY(visibleRect.top());
@@ -646,8 +653,11 @@ void MapWidget::renderVisibleEdges() {
     }
     
     // Renderizar aristas visibles
+    static constexpr int MAX_VISIBLE_EDGES = 15000;
+
     int renderedCount = 0;
     for (auto* edge : candidates) {
+        if (renderedCount >= MAX_VISIBLE_EDGES) break;
         if (!edge) continue;
         
         auto fromNode = edge->getSource();
@@ -679,5 +689,69 @@ void MapWidget::renderVisibleEdges() {
         scene_->setSceneRect(0, 0, 10000, 10000);
     }
 }
+
+void MapWidget::buildNodeGrid() {
+    if (!graph_ || nodeGridBuilt_) return;
+    
+    qDebug() << "Construyendo grid de nodos...";
+    
+    nodeGrid_.resize(GRID_SIZE);
+    for (int i = 0; i < GRID_SIZE; ++i) {
+        nodeGrid_[i].resize(GRID_SIZE);
+    }
+    
+    for (Node* node : graph_->getNodes()) {
+        if (!node) continue;
+        
+        QPointF pos = geoToPixel(node->getCoordinate().getLatitude(),
+                                  node->getCoordinate().getLongitude());
+        
+        int gx = getGridX(pos.x());
+        int gy = getGridY(pos.y());
+        
+        if (gx >= 0 && gx < GRID_SIZE && gy >= 0 && gy < GRID_SIZE) {
+            nodeGrid_[gx][gy].push_back(node);
+        }
+    }
+    
+    nodeGridBuilt_ = true;
+    qDebug() << "Grid de nodos construido";
+}
+
+int64_t MapWidget::findNodeInGrid(const QPointF& scenePos, double threshold) {
+    if (!graph_ || !nodeGridBuilt_) return -1;
+    
+    int centerGx = getGridX(scenePos.x());
+    int centerGy = getGridY(scenePos.y());
+    
+    double minDistSq = threshold * threshold;
+    int64_t closestNodeId = -1;
+    
+    // Buscar solo en celdas cercanas (3x3)
+    for (int dx = -1; dx <= 1; ++dx) {
+        for (int dy = -1; dy <= 1; ++dy) {
+            int gx = centerGx + dx;
+            int gy = centerGy + dy;
+            
+            if (gx < 0 || gx >= GRID_SIZE || gy < 0 || gy >= GRID_SIZE) continue;
+            
+            for (Node* node : nodeGrid_[gx][gy]) {
+                QPointF nodePos = geoToPixel(node->getCoordinate().getLatitude(),
+                                              node->getCoordinate().getLongitude());
+                double distX = scenePos.x() - nodePos.x();
+                double distY = scenePos.y() - nodePos.y();
+                double distSq = distX * distX + distY * distY;
+                
+                if (distSq < minDistSq) {
+                    minDistSq = distSq;
+                    closestNodeId = node->getId();
+                }
+            }
+        }
+    }
+    
+    return closestNodeId;
+}
+
 
 } // namespace ui
