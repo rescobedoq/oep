@@ -7,6 +7,7 @@
 #include <QCheckBox>
 #include <QLabel>
 #include <QGroupBox>
+#include <QScrollArea>
 #include <vector>
 
 namespace ui {
@@ -35,6 +36,11 @@ public:
      * @brief Habilita/deshabilita controles según estado de carga del grafo
      */
     void setGraphLoaded(bool loaded);
+
+    /**
+     * @brief Habilita/deshabilita el botón limpiar según si hay selección
+     */
+    void setHasSelection(bool hasSelection);
 
 signals:
     /**
@@ -85,6 +91,11 @@ signals:
      */
     void calculateRequested(const std::vector<int64_t>& nodeIds);
 
+    /**
+     * @brief Emitido cuando usuario solicita limpiar la selección
+     */
+    void clearSelectionRequested();
+
 private slots:
     void onModeChanged(int index);
     void onProfileChanged(int index);
@@ -94,6 +105,7 @@ private slots:
     void onManualStartButtonClicked();
     void onManualDestButtonClicked();
     void onCalculateButtonClicked();
+    void onClearButtonClicked();
 
 private:
     void setupUi();
@@ -125,6 +137,7 @@ private:
     
     // Acción
     QPushButton* calculateButton_;
+    QPushButton* clearButton_; //---Limpiar nodos
     
     // === ESTADO ===
     bool graphLoaded_;
