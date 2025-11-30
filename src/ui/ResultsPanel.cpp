@@ -1,6 +1,7 @@
 #include "ResultsPanel.h"
 #include <QHeaderView>
 #include <QTreeWidgetItem>
+#include <QScrollArea>
 #include <cmath>
 
 namespace ui {
@@ -14,25 +15,37 @@ ResultsPanel::~ResultsPanel() = default;
 
 void ResultsPanel::setupUi() {
     auto* mainLayout = new QVBoxLayout(this);
-    
+
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(0);
+
+    // Crear un widget contenedor para el contenido
+    auto* contentWidget = new QWidget(this);
+    auto* contentLayout = new QVBoxLayout(contentWidget);
+    contentLayout->setContentsMargins(10, 10, 10, 10);
+    contentLayout->setSpacing(10);
+
     // Título
     titleLabel_ = new QLabel("Resultados", this);
     QFont titleFont = titleLabel_->font();
     titleFont.setPointSize(12);
     titleFont.setBold(true);
     titleLabel_->setFont(titleFont);
-    mainLayout->addWidget(titleLabel_);
-    
-    // Resumen (distancia total, tiempo total)
+
+    contentLayout->addWidget(titleLabel_);
+
     summaryLabel_ = new QLabel("No hay resultados", this);
     summaryLabel_->setWordWrap(true);
     summaryLabel_->setStyleSheet("QLabel { padding: 10px; background-color: #f0f0f0; border-radius: 5px; }");
-    mainLayout->addWidget(summaryLabel_);
-    
+
+    contentLayout->addWidget(summaryLabel_);
+
     // Árbol de detalles por tramo
     detailsTree_ = new QTreeWidget(this);
-    detailsTree_->setHeaderLabels({"Descripción", "Valor"});
-    detailsTree_->setColumnWidth(0, 300);
+    detailsTree_->setHeaderLabels({"Descripción", "Valor"});    
+    detailsTree_->header()->setSectionResizeMode(0, QHeaderView::Stretch);
+    detailsTree_->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    detailsTree_->setMinimumHeight(200); // Altura mínima
     detailsTree_->setAlternatingRowColors(true);
     detailsTree_->setStyleSheet(R"(
         QTreeWidget {
@@ -47,8 +60,19 @@ void ResultsPanel::setupUi() {
             color: white;
         }
     )");
-    mainLayout->addWidget(detailsTree_);
-    
+
+    contentLayout->addWidget(detailsTree_);
+
+    // Crear el scroll area
+    auto* scrollArea = new QScrollArea(this);
+    scrollArea->setWidget(contentWidget);
+    scrollArea->setWidgetResizable(true);  //  Permite redimensionar
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);  // Sin scroll horizontal
+    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);  // Scroll vertical solo si es necesario
+    scrollArea->setFrameShape(QFrame::NoFrame);  // Sin borde del scroll area
+
+    mainLayout->addWidget(scrollArea);
+
     setLayout(mainLayout);
 }
 
@@ -92,7 +116,7 @@ void ResultsPanel::displayPathResult(const PathfindingService::PathResult& resul
     double timeMs = calculateTime(result.totalDistance);
     summaryLabel_->setText(QString(
         "<b> Distancia Total:</b> %1<br>"
-        "<b>️ Tiempo Estimado:</b> %2<br>"
+        "<b> Tiempo Estimado:</b> %2<br>"
         "<b> Nodos Explorados:</b> %3<br>"
         "<b> Algoritmo:</b> %4"
     ).arg(formatDistance(result.totalDistance))
@@ -144,10 +168,10 @@ void ResultsPanel::displayTspResult(const TspService::TspResult& result) {
     // Resumen
     double timeMs = calculateTime(result.totalDistance);
     summaryLabel_->setText(QString(
-        "<b> Distancia Total del Tour:</b> %1<br>"
-        "<b>️ Tiempo Estimado:</b> %2<br>"
-        "<b> Nodos Visitados:</b> %3<br>"
-        "<b> Algoritmo TSP:</b> %4"
+        "<b>Distancia Total del Tour:</b> %1<br>"
+        "<b>Tiempo Estimado:</b> %2<br>"
+        "<b>Nodos Visitados:</b> %3<br>"
+        "<b>Algoritmo TSP:</b> %4"
     ).arg(formatDistance(result.totalDistance))
      .arg(formatTime(timeMs))
      .arg(result.nodeIds.size())
@@ -217,7 +241,7 @@ void ResultsPanel::displayTspResult(const TspService::TspResult& result) {
         
         // Calles del tramo
         auto* streetsHeader = new QTreeWidgetItem(segmentItem);
-        streetsHeader->setText(0, "️Calles en orden");
+        streetsHeader->setText(0, "Calles en orden");
         streetsHeader->setText(1, QString("%1 calles").arg(segmentEdges.size()));
         streetsHeader->setExpanded(true);
         
