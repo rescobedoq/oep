@@ -13,10 +13,15 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 set(PROJECT_SOURCES
-        src/main.cpp
+        # UI
+	      src/main.cpp
         src/ui/mainwindow.cpp
         src/ui/mainwindow.h
         src/ui/mainwindow.ui
+	      src/ui/ControlPanel.h
+    	  src/ui/ControlPanel.cpp
+    	  src/ui/ResultsPanel.h
+   	    src/ui/ResultsPanel.cpp
 
         # Core entities
         src/core/entities/Node.h

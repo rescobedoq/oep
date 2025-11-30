@@ -7,11 +7,10 @@
 #include <memory>
 #include <vector>
 #include <cstdint>
-#include "src/core/entities/Graph.h"
+#include "../core/entities/Graph.h"
 #include "MapWidget.h"
-// #include "ControlPanel.h"
-// #include "ResultsPanel.h"
-
+#include "ControlPanel.h"
+#include "ResultsPanel.h"
 
 class Graph; 
 class PathfindingService; 
@@ -26,6 +25,9 @@ class MapWidget;
 class ControlPanel;
 class ResultsPanel;
 }
+
+namespace ui {
+
 
 // Usar clases del namespace ui
 using ui::MapWidget;
@@ -52,9 +54,28 @@ private slots:
     void onGraphLoadError(const QString& errorMessage);
     void onGraphLoadProgress(const QString& message, double progress);
 
+    // === ControlPanel signals ===
+    void onModeChanged(bool isTsp);
+    void onProfileChanged(const QString& profile);
+    void onPathfindingAlgorithmChanged(const QString& algorithm);
+    void onTspAlgorithmChanged(const QString& algorithm);
+    void onReturnToStartChanged(bool returnToStart);
+    void onManualStartSelectionChanged(bool active);
+    void onManualDestSelectionChanged(bool active);
+    void onCalculateRequested(const std::vector<int64_t>& nodeIds);
+
     // MapWidget signals
     void onMapNodeSelected(int64_t nodeId, bool isSelected);
     void onMapSelectionChanged(const std::vector<int64_t>& selectedNodes);
+    void onClearSelectionRequested();
+
+    // === PathfindingService signals ===
+    void onPathFound();
+    void onPathError(const QString& error);
+
+    // === TspService signals ===
+    void onTspSolved();
+    void onTspError(const QString& error);
 
 private:
     void setupUi();
@@ -74,8 +95,8 @@ private:
 
     // WIDGETS
     MapWidget* mapWidget_;
-    //ControlPanel* controlPanel_;
-    //ResultsPanel* resultsPanel_;
+    ControlPanel* controlPanel_;
+    ResultsPanel* resultsPanel_;
     QSplitter* mainSplitter_;
     QSplitter* verticalSplitter_;
 
@@ -96,3 +117,4 @@ private:
     Ui::MainWindow *ui;
 };
 #endif // MAINWINDOW_H
+}
