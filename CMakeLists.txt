@@ -14,14 +14,14 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 set(PROJECT_SOURCES
         # UI
-	src/main.cpp
+	      src/main.cpp
         src/ui/mainwindow.cpp
         src/ui/mainwindow.h
         src/ui/mainwindow.ui
-	src/ui/ControlPanel.h
-    	src/ui/ControlPanel.cpp
-    	src/ui/ResultsPanel.h
-   	src/ui/ResultsPanel.cpp
+	      src/ui/ControlPanel.h
+    	  src/ui/ControlPanel.cpp
+    	  src/ui/ResultsPanel.h
+   	    src/ui/ResultsPanel.cpp
 
         # Core entities
         src/core/entities/Node.h
@@ -81,7 +81,6 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
         src/ui/MapWidget.h
         src/ui/MapWidget.cpp
-	
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET oep APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
