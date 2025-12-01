@@ -376,7 +376,7 @@ void MapWidget::drawSelectedNodes() {
         
         // Primer nodo (inicio) en verde, resto en colores distintos
         QColor color = (i == 0) ? QColor(0, 200, 0) : QColor(255, 150, 0);
-        double radius = 10.0;
+        double radius = 4.0;
         
         QPen pen(color.darker());
         pen.setWidthF(3.0);
@@ -396,7 +396,7 @@ void MapWidget::drawSelectedNodes() {
             
             auto* textItem = scene_->addText(QString(letter));
             textItem->setDefaultTextColor(Qt::white);
-            textItem->setFont(QFont("Arial", 12, QFont::Bold));
+            textItem->setFont(QFont("Arial", 6, QFont::Bold));
             
             // Centrar texto en el nodo
             QRectF textRect = textItem->boundingRect();
@@ -474,7 +474,7 @@ void MapWidget::displayPath(const std::vector<Edge*>& pathEdges) {
                                 toNode->getCoordinate().getLongitude());
         
         QPen pen(QColor(0, 100, 255));
-        pen.setWidthF(4.0);
+        pen.setWidthF(2.0);
         pen.setCapStyle(Qt::RoundCap);
         
         auto* lineItem = scene_->addLine(p1.x(), p1.y(), p2.x(), p2.y(), pen);
@@ -506,7 +506,7 @@ void MapWidget::displayTspTour(
         // Color: verde para segmento actual, azul para resto
         QColor color = (static_cast<int>(i) == currentSegmentIndex) ? 
                        QColor(0, 200, 0) : QColor(0, 100, 255);
-        double width = (static_cast<int>(i) == currentSegmentIndex) ? 5.0 : 3.0;
+        double width = (static_cast<int>(i) == currentSegmentIndex) ? 2.5 : 1.8;
         
         for (auto* edge : segment) {
             if (!edge) continue;
