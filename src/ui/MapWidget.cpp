@@ -453,6 +453,8 @@ void MapWidget::clearSelection() {
 }
 
 void MapWidget::displayPath(const std::vector<Edge*>& pathEdges) {
+    clearPath();
+
     currentPathEdges_ = pathEdges;
     currentTspSegments_.clear();
     currentHighlightedSegment_ = -1;
@@ -460,9 +462,24 @@ void MapWidget::displayPath(const std::vector<Edge*>& pathEdges) {
     if (!graph_) return;
     
     for (auto* edge : pathEdges) {
-        if (edge) {
-            drawEdge(edge, QColor(0, 100, 255), 4.0);
-        }
+        if (!edge) continue;
+        
+        auto fromNode = edge->getSource();
+        auto toNode = edge->getTarget();
+        if (!fromNode || !toNode) continue;
+        
+        QPointF p1 = geoToPixel(fromNode->getCoordinate().getLatitude(), 
+                                fromNode->getCoordinate().getLongitude());
+        QPointF p2 = geoToPixel(toNode->getCoordinate().getLatitude(), 
+                                toNode->getCoordinate().getLongitude());
+        
+        QPen pen(QColor(0, 100, 255));
+        pen.setWidthF(4.0);
+        pen.setCapStyle(Qt::RoundCap);
+        
+        auto* lineItem = scene_->addLine(p1.x(), p1.y(), p2.x(), p2.y(), pen);
+        lineItem->setZValue(5);
+        pathEdgeItems_.push_back(lineItem);
     }
     
     // Redibujar nodos seleccionados encima
@@ -473,6 +490,9 @@ void MapWidget::displayTspTour(
     const std::vector<std::vector<Edge*>>& segmentEdges,
     int currentSegmentIndex
 ) {
+    // Limpiar ruta anterior primero
+    clearPath();
+    
     currentTspSegments_ = segmentEdges;
     currentHighlightedSegment_ = currentSegmentIndex;
     currentPathEdges_.clear();
@@ -489,9 +509,24 @@ void MapWidget::displayTspTour(
         double width = (static_cast<int>(i) == currentSegmentIndex) ? 5.0 : 3.0;
         
         for (auto* edge : segment) {
-            if (edge) {
-                drawEdge(edge, color, width);
-            }
+            if (!edge) continue;
+            
+            auto fromNode = edge->getSource();
+            auto toNode = edge->getTarget();
+            if (!fromNode || !toNode) continue;
+            
+            QPointF p1 = geoToPixel(fromNode->getCoordinate().getLatitude(), 
+                                    fromNode->getCoordinate().getLongitude());
+            QPointF p2 = geoToPixel(toNode->getCoordinate().getLatitude(), 
+                                    toNode->getCoordinate().getLongitude());
+            
+            QPen pen(color);
+            pen.setWidthF(width);
+            pen.setCapStyle(Qt::RoundCap);
+            
+            auto* lineItem = scene_->addLine(p1.x(), p1.y(), p2.x(), p2.y(), pen);
+            lineItem->setZValue(5);  
+            pathEdgeItems_.push_back(lineItem);
         }
     }
     
@@ -500,10 +535,19 @@ void MapWidget::displayTspTour(
 }
 
 void MapWidget::clearPath() {
+    for (auto* item : pathEdgeItems_) {
+        if (item && item->scene() == scene_) {
+            scene_->removeItem(item);
+        }
+        delete item;
+    }
+    pathEdgeItems_.clear();
+    
     currentPathEdges_.clear();
     currentTspSegments_.clear();
     currentHighlightedSegment_ = -1;
     
+    // Re-renderizar aristas base
     if (graph_) {
         renderVisibleEdges();
     }
@@ -513,7 +557,7 @@ void MapWidget::resetView() {
     if (!graph_) return;
     
     resetTransform();
-    currentZoom_ = INITIAL_ZOOM;  // 🚀 Zoom inicial GRANDE (3.0)
+    currentZoom_ = INITIAL_ZOOM;  // Zoom inicial GRANDE (3.0)
     scale(currentZoom_, currentZoom_);
     
     scene_->setSceneRect(0, 0, 10000, 10000);
