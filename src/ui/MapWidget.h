@@ -201,7 +201,10 @@ private:
     std::vector<QGraphicsLineItem*> edgeItems_;
     
     // Calidad de renderizado
-    RenderQuality renderQuality_ = RenderQuality::LOW;
+    RenderQuality renderQuality_ = RenderQuality::MEDIUM;
+
+    // Items de rutas visualizadas
+    std::vector<QGraphicsLineItem*> pathEdgeItems_;
     
     // Cache de colores para performance
     std::unordered_map<std::string, QColor> colorCache_;
