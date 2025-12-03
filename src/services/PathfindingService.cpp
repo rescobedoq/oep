@@ -3,6 +3,7 @@
 #include "../utils/exceptions/GraphException.h"
 #include <QtConcurrent/QtConcurrent>
 #include <chrono>
+#include <iostream>
 
 PathfindingService::PathfindingService(QObject* parent)
     : QObject(parent)
@@ -34,6 +35,8 @@ PathfindingService::PathResult PathfindingService::findPathSync(
     
     auto endTime = std::chrono::high_resolution_clock::now();
     double executionTimeMs = std::chrono::duration<double, std::milli>(endTime - startTime).count();
+    
+    std::cout << "   Pathfinding computation time: " << executionTimeMs << " ms (" << algorithmName << ")" << std::endl;
     
     // Calculate total distance and collect Edge pointers + Node IDs
     double totalDistance = 0.0;

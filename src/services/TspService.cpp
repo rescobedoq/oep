@@ -8,6 +8,7 @@
 #include <QtConcurrent/QtConcurrent>
 #include <chrono>
 #include <algorithm>
+#include <iostream>
 
 TspService::TspService(QObject* parent)
     : QObject(parent)
@@ -128,11 +129,17 @@ void TspService::solveAsync(
                 igAlgo->setReturnToStart(returnToStart);
             }
             
+            auto tspStartTime = std::chrono::high_resolution_clock::now();
             std::vector<int> tour = tspAlgo->solve(matrix, waypointIds);
+            auto tspEndTime = std::chrono::high_resolution_clock::now();
+            double tspTimeMs = std::chrono::duration<double, std::milli>(tspEndTime - tspStartTime).count();
             
             auto totalEndTime = std::chrono::high_resolution_clock::now();
             double totalTimeMs = std::chrono::duration<double, std::milli>(
                 totalEndTime - totalStartTime).count();
+            
+            std::cout << "   TSP Algorithm computation time: " << tspTimeMs << " ms" << std::endl;
+            std::cout << "   Total time (matrix + TSP): " << totalTimeMs << " ms" << std::endl;
             
             // 4. Calculate total distance and collect segment details
             double totalDistance = matrix.calculateTourCost(tour, returnToStart);
