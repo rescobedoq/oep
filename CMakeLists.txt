@@ -59,12 +59,18 @@ set(PROJECT_SOURCES
         # Algorithms - Pathfinding
         src/algorithms/pathfinding/DijkstraAlgorithm.h
         src/algorithms/pathfinding/DijkstraAlgorithm.cpp
+        src/algorithms/pathfinding/AStarAlgorithm.h
+        src/algorithms/pathfinding/AStarAlgorithm.cpp
         
         # Algorithms - TSP
         src/algorithms/tsp/TspMatrix.h
         src/algorithms/tsp/TspMatrix.cpp
         src/algorithms/tsp/IGAlgorithm.h
         src/algorithms/tsp/IGAlgorithm.cpp
+        src/algorithms/tsp/IGNAlgorithm.h
+        src/algorithms/tsp/IGNAlgorithm.cpp
+        src/algorithms/tsp/ILSBAlgorithm.h
+        src/algorithms/tsp/ILSBAlgorithm.cpp
         
         # Factories
         src/algorithms/factories/AlgorithmFactory.h
