@@ -74,14 +74,31 @@ set(PROJECT_SOURCES
         src/algorithms/factories/VehicleProfileFactory.h
         src/algorithms/factories/VehicleProfileFactory.cpp
 )
+# Option to skip building the Qt GUI (useful for CI / headless test builds)
+option(BUILD_WITH_QT "Build GUI with Qt (requires Qt installed)" ON)
 
-if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(oep
-        MANUAL_FINALIZATION
-        ${PROJECT_SOURCES}
-        src/ui/MapWidget.h
-        src/ui/MapWidget.cpp
-    )
+if(BUILD_WITH_QT)
+    if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+        qt_add_executable(oep
+            MANUAL_FINALIZATION
+            ${PROJECT_SOURCES}
+            src/ui/MapWidget.h
+            src/ui/MapWidget.cpp
+        )
+    else()
+        if(ANDROID)
+            add_library(oep SHARED
+                ${PROJECT_SOURCES}
+            )
+        else()
+            add_executable(oep
+                ${PROJECT_SOURCES}
+            )
+        endif()
+    endif()
+else()
+    message(STATUS "BUILD_WITH_QT=OFF: Skipping Qt GUI target. Only non-GUI targets (tests) will be available.")
+endif()
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET oep APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
@@ -100,8 +117,11 @@ else()
     endif()
 endif()
 
-target_link_libraries(oep PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-target_include_directories(oep PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+# Only link Qt and set target includes if GUI target was created
+if(BUILD_WITH_QT)
+    target_link_libraries(oep PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+    target_include_directories(oep PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+endif()
 
 # Copiar carpeta data al directorio de build
 add_custom_command(TARGET oep POST_BUILD
@@ -110,6 +130,10 @@ add_custom_command(TARGET oep POST_BUILD
         $<TARGET_FILE_DIR:oep>/data
     COMMENT "Copiando carpeta data al directorio de ejecución"
 )
+
+# Enable tests and add tests directory so backend tests can be built independently
+enable_testing()
+add_subdirectory(tests)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
