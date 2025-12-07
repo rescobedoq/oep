@@ -326,7 +326,7 @@ void MainWindow::onCalculateRequested(const std::vector<int64_t>& nodeIds) {
         tspService_->solveAsync(
             selectedNodes,
             currentTspAlgorithm_.toStdString(),
-            "dijkstra",
+            currentPathfindingAlgorithm_.toStdString(),
             vehicleProfile.get(),  // Pasar el perfil correcto
             returnToStart_
             );

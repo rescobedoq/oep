@@ -5,19 +5,20 @@
 #include <random>
 
 /**
- * @brief Iterated Greedy for TSP
+ * @brief Iterated Greedy with Nearest Neighbor for TSP
  * 
- * - removeAndReinsert() → destruction + construction
- * - localSearch() → 2-opt swap
- * - 5000 iterations by default
+ * Similar to IG but uses Nearest Neighbor for initial solution
+ * - removeAndReinsert() → destruction + construction (3 nodes)
+ * - No local search (faster than IG)
+ * - 10000 iterations by default
  */
-class IGAlgorithm : public ITspAlgorithm {
+class IGNAlgorithm : public ITspAlgorithm {
 private:
     int maxIterations_;
     bool returnToStart_;
     
 public:
-    IGAlgorithm(int maxIterations = 5000, bool returnToStart = false)
+    IGNAlgorithm(int maxIterations = 10000, bool returnToStart = false)
         : maxIterations_(maxIterations)
         , returnToStart_(returnToStart)
     {}
@@ -28,7 +29,7 @@ public:
     ) override;
     
     std::string getName() const override {
-        return "IG";
+        return "IGN";
     }
     
     void setReturnToStart(bool value) {
@@ -41,17 +42,17 @@ public:
     
 private:
     /**
-     * @brief Destruction + Construction
+     * @brief Remove and reinsert 3 random nodes
      */
     void removeAndReinsert(std::vector<int>& route, std::mt19937& rng);
     
     /**
-     * @brief Local Search (2-opt swap)
-     */
-    double localSearch(std::vector<int>& route, const TspMatrix& matrix);
-    
-    /**
-     * @brief Calculate route distance
+     * @brief Calculate total route distance
      */
     double routeDistance(const std::vector<int>& route, const TspMatrix& matrix) const;
+    
+    /**
+     * @brief Ensure route starts with the first node
+     */
+    void ensureStartNode(std::vector<int>& route, int startIndex);
 };

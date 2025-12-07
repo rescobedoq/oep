@@ -5,19 +5,20 @@
 #include <random>
 
 /**
- * @brief Iterated Greedy for TSP
+ * @brief Iterated Local Search Basic for TSP
  * 
- * - removeAndReinsert() → destruction + construction
- * - localSearch() → 2-opt swap
+ * - Uses shuffle for perturbation
+ * - Local search with 2-opt swaps
  * - 5000 iterations by default
+ * - Simpler than IG, faster convergence
  */
-class IGAlgorithm : public ITspAlgorithm {
+class ILSBAlgorithm : public ITspAlgorithm {
 private:
     int maxIterations_;
     bool returnToStart_;
     
 public:
-    IGAlgorithm(int maxIterations = 5000, bool returnToStart = false)
+    ILSBAlgorithm(int maxIterations = 5000, bool returnToStart = false)
         : maxIterations_(maxIterations)
         , returnToStart_(returnToStart)
     {}
@@ -28,7 +29,7 @@ public:
     ) override;
     
     std::string getName() const override {
-        return "IG";
+        return "ILSB";
     }
     
     void setReturnToStart(bool value) {
@@ -41,17 +42,18 @@ public:
     
 private:
     /**
-     * @brief Destruction + Construction
-     */
-    void removeAndReinsert(std::vector<int>& route, std::mt19937& rng);
-    
-    /**
-     * @brief Local Search (2-opt swap)
+     * @brief Local search using 2-opt swaps
+     * Returns the best distance found
      */
     double localSearch(std::vector<int>& route, const TspMatrix& matrix);
     
     /**
-     * @brief Calculate route distance
+     * @brief Calculate total route distance
      */
     double routeDistance(const std::vector<int>& route, const TspMatrix& matrix) const;
+    
+    /**
+     * @brief Ensure route starts with the first node
+     */
+    void ensureStartNode(std::vector<int>& route, int startIndex);
 };

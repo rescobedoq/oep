@@ -212,4 +212,3 @@ bool TspMatrix::hasValidSolution() const {
     
     return true;
 }
-
