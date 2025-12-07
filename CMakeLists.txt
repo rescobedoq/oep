@@ -138,6 +138,48 @@ install(TARGETS oep
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+set(TEST_RUNNER_SOURCES
+    tests/unit/TestRunner.cpp
+    
+    src/core/entities/Node.cpp
+    src/core/entities/Edge.cpp
+    src/core/entities/Graph.cpp
+    src/infraestructure/loaders/BinaryGraphLoader.cpp
+    src/services/PathfindingService.cpp
+    src/services/TspService.cpp
+    src/algorithms/VehicleProfile.cpp
+    src/algorithms/pathfinding/DijkstraAlgorithm.cpp
+    src/algorithms/tsp/IGAlgorithm.cpp
+    src/algorithms/tsp/TspMatrix.cpp
+    src/algorithms/factories/VehicleProfileFactory.cpp
+    src/algorithms/factories/AlgorithmFactory.cpp
+    src/algorithms/factories/TspAlgorithmFactory.cpp
+ )
+
+ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    qt_add_executable(test_runner
+        MANUAL_FINALIZATION
+        ${TEST_RUNNER_SOURCES}
+    )
+ else()
+    add_executable(test_runner ${TEST_RUNNER_SOURCES})
+ endif()
+
+ target_include_directories(test_runner PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+ target_include_directories(test_runner PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/core/entities)
+ target_link_libraries(test_runner PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+
+ if(QT_VERSION_MAJOR EQUAL 6)
+    qt_finalize_executable(test_runner)
+ endif()
+
+ add_custom_command(TARGET test_runner POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/data
+        $<TARGET_FILE_DIR:test_runner>/data
+    COMMENT "Copiando carpeta data para test_runner"
+ )
+
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(oep)
 endif()
